@@ -2,7 +2,7 @@
 
 julia_version = "1.13.2"
 manifest_format = "2.1"
-project_hash = "bce93ed4c1d16f77301ac2b10f8502dc2d30c5b1"
+project_hash = "a20834070701654c1bbeb10c5d115d4060635690"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -367,6 +367,12 @@ git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 registries = "General"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.16.0"
+
+[[deps.DataDrivenControl]]
+deps = ["ControlSystemsBase", "DataFrames", "Distributions", "GLMakie", "LinearAlgebra", "Pluto", "Random", "StableRNGs", "Statistics", "Test"]
+path = "."
+uuid = "515d43ea-5f13-40c0-aad5-9a2640b89a90"
+version = "0.1.0"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
