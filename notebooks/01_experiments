@@ -1,0 +1,36 @@
+### A Pluto.jl notebook ###
+# v1.0.4
+
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ 8339dfbe-c98d-11f1-af7f-d9be02cc3632
+begin
+    using Pkg
+
+    # The project is one directory above this notebook.
+    project_dir = normpath(joinpath(@__DIR__, ".."))
+
+    # Catch an incorrect notebook location before activating anything.
+    @assert isfile(joinpath(project_dir, "Project.toml")) """
+    Project.toml was not found. Save this notebook directly inside
+    the DataDrivenControl/notebooks folder before running this cell.
+    """
+
+    Pkg.activate(project_dir)
+    Pkg.instantiate()
+
+    using LinearAlgebra, Random, Statistics
+    using Distributions, StableRNGs, ControlSystemsBase
+end
+
+# ╔═╡ 94f62b11-bfff-4e1e-9872-e305634a10dc
+begin
+	@show VERSION
+	@show Base.active_project()
+	Pkg.status()
+end
+
+# ╔═╡ Cell order:
+# ╠═8339dfbe-c98d-11f1-af7f-d9be02cc3632
+# ╠═94f62b11-bfff-4e1e-9872-e305634a10dc

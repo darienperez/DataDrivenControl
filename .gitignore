@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Local credentials and environment variables
+.env
+.env.*
+!.env.example
+
+# Julia coverage and allocation reports
+*.jl.cov
+*.jl.mem
+
+# Datasets stay outside Git for now
+/data/*
+!/data/README.md
+
+# Generated results stay outside Git for now
+/results/*
+!/results/README.md
