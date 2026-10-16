@@ -2,6 +2,7 @@
 .DS_Store
 
 # Local credentials and environment variables
+.vscode
 .env
 .env.*
 !.env.example
