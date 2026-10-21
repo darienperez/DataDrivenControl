@@ -7,3 +7,5 @@ using DataDrivenControl, LinearAlgebra, Test
     b = [1.0, 2.0]
     @test isapprox(M \ b, [1/5, 3/5]; rtol=1e-12, atol=1e-12)
 end
+
+include("simulate.jl")
