@@ -25,6 +25,19 @@ unless the current task explicitly establishes that preference.
 - Preserve Pluto cell identifiers and notebook structure.
 - Prefer GLMakie for interactive exploration.
 - Keep automated tests independent of interactive graphics.
+- Julia is the primary language; use Pluto.jl for notebooks and prefer GLMakie
+  for interactive plots.
+- Favor idiomatic Julia, appropriate numeric types, type stability, efficient
+  allocation, and standard naming and mutation conventions. Use generic
+  functions and multiple dispatch where appropriate, introducing abstractions
+  as concrete needs emerge.
+
+## Learning and continuity
+
+- Let the user attempt important mathematical and coding steps before giving
+  complete solutions.
+- Explain Git/GitHub operations until the user explicitly asks you to stop.
+- When resuming a named task, read its repository record first.
 
 ## Scientific standards
 
