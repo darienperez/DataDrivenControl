@@ -1,5 +1,41 @@
 # F1: Initial states and input/output behavior
 
+## Current numerical Hankel checkpoint — 2026-10-27
+
+Working branch: `foundation/f1-hankel-matrices`, based on `b8930e1`.
+The existing simulator is exported as `DataDrivenControl.simulate` from
+[src/simulate_lti.jl](../src/simulate_lti.jl). Five original F1 assertions and
+nine simulator regressions live in [test/simulate_lti.jl](../test/simulate_lti.jl);
+the benchmark notebook calls the package.
+
+The user has implemented the constructor in
+[notebooks/F1_hankel_matrices.jl](../notebooks/F1_hankel_matrices.jl).
+The $T=6$, $L=3$ hand-versus-Julia comparison is numerically verified:
+**10/10 external checks passed** at the existing `rtol=atol=1e-12`.
+The largest discrepancy was $2.220446049250313\times10^{-16}$.
+The user's reflection is recorded: nearly identical floating-point results
+can fail exact equality, making `isapprox()` important. References and tolerances
+were not changed.
+
+See [the Hankel record](F1_hankel_matrices.md) for source provenance, results,
+and unresolved issues. The saved notebook still needs persistent approximate
+assertions and updated result text. Its unused `Behavior` indexer remains
+recursive; reusable depth handling is not yet established.
+
+Session report: [F1 Hankel numerical progress record](../output/pdf/F1_Hankel_Numerical_Progress_Record_2026-10-27.pdf).
+
+Validation chronology: the latest direct package suite passed **15/15**.
+Earlier extraction checks passed **15/15** in both the direct suite and CI
+`Pkg.test(; allow_reresolve=false)`; project/manifest were unchanged.
+The pre-move baseline completed 18 non-setup cells with five assertions.
+After extraction, 12 benchmark/7 Hankel non-setup cells and **5/5** binding/
+trajectory checks passed. Six Julia files/five Markdown cells parsed, with
+original cell IDs and user work preserved. Direct checks emitted Markdown/Test
+import warnings. These are earlier executed checks, not numerical tests rerun
+for this documentation update. Setup cells and Pluto UI remain untested.
+
+Earlier notes and validation results below are historical.
+
 ## Status and continuity
 
 The four-step numerical F1 checkpoint is verified: its earlier verification
