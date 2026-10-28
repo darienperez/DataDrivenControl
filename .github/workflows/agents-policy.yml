@@ -31,6 +31,7 @@ concurrency:
 
 jobs:
   checker-tests:
+    name: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'checker-tests' || 'checker-tests (not applicable)' }}
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
