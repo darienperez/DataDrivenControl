@@ -149,8 +149,8 @@ Rollout checkpoint — 2026-10-28:
 - [x] Commit and publish the synchronized policy on the Hankel branch.
 - [x] Synchronize every existing published branch and advance the local-only `status` pointer.
 - [x] Verify instruction agreement and preserve all nonpolicy branch contents.
-- [ ] Verify the `AGENTS policy` status on this rollout-record PR.
-- [ ] Enable and verify required checks on `main`.
+- [x] Verify the `AGENTS policy` status on [PR #3](https://github.com/darienperez/DataDrivenControl/pull/3), without a policy exception.
+- [x] Enable and read back the required checks and PR protection on `main`.
 
 The policy rollout commits contain only `AGENTS.md`, `README.md`, the checker,
 its tests, and its workflow. Every other tree entry and the earlier branch
@@ -174,9 +174,12 @@ private-repository branch protection under the current account plan. Existing
 rulesets were empty and `main` had no branch protection. An active Actions event
 policy now permits the five existing triggers only for
 `.github/workflows/agents-policy.yml`; other workflows are outside this rule.
-The intended required checks are `AGENTS policy`, `checker-tests`, and package
-`test`, with an up-to-date base, PRs required, and administrator enforcement.
-No additional reviewer is required for this solo-owner workflow.
+The required checks are `AGENTS policy`, `checker-tests`, and package `test`,
+all bound to the observed GitHub Actions app (ID `15368`). Protection was read
+back after configuration: the base must be up to date, PRs are required, and
+administrators must follow the rules. No additional approving reviewer is
+required for this solo-owner workflow. Force pushes and branch deletion are
+disabled for `main`.
 
 Validation already executed:
 
@@ -192,6 +195,10 @@ during precompilation despite successful job exits. No dependency, reference,
 tolerance, metric, or research code was changed for this rollout. The earlier
 local and CI results above were not rerun for this documentation edit.
 
-This PR records the live gate result and protection settings once verified.
+Live activation was verified on the initial README-only PR head `d22a5a4`:
+the trusted guard published a successful `AGENTS policy` status from
+`github-actions[bot]`, without a policy label or owner acknowledgement. The
+checker job passed **108/108**. The final PR revision must pass all three
+required checks before it can merge; its check results are the live record.
 The original implementation and intermediate validation checkpoints remain in
 [PR #2](https://github.com/darienperez/DataDrivenControl/pull/2).
