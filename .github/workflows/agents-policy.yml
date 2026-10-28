@@ -1,0 +1,279 @@
+name: AGENTS policy
+
+# The privileged policy guard is loaded from main and inspects PR Git data only.
+# Proposed checker tests run separately on pull_request with read-only access.
+on:
+  pull_request:
+    branches: [main]
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited, labeled, unlabeled, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+  push:
+    branches: [main]
+    paths:
+      - AGENTS.md
+      - AGENTS.override.md
+      - '**/AGENTS.md'
+      - '**/AGENTS.override.md'
+      - scripts/check_agents.jl
+      - test/check_agents.jl
+      - .github/workflows/agents-policy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agents-policy-${{ github.event_name == 'pull_request' && 'tests' || 'guard' }}-${{ github.event.pull_request.number || github.event.issue.number || 'audit' }}
+  cancel-in-progress: true
+
+jobs:
+  checker-tests:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.13.2"
+      - name: Test policy checker in isolated temporary repositories
+        run: julia --startup-file=no --project=. test/check_agents.jl
+
+  policy:
+    if: github.event_name != 'pull_request' && (github.event_name != 'issue_comment' || github.event.issue.pull_request)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      # issue_comment runs on main, so publish the gate on the actual PR head.
+      # This permission is used only for commit statuses, never repository files.
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check pull request policy and audit branch snapshots
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import html
+          import json
+          import os
+          import re
+          import sys
+          import urllib.request
+
+          POLICY_PATHS = (
+              "AGENTS.md",
+              "scripts/check_agents.jl",
+              "test/check_agents.jl",
+              ".github/workflows/agents-policy.yml",
+          )
+          PROPOSAL_PATHS = set(POLICY_PATHS) | {"README.md"}
+          STATUS_CONTEXT = "AGENTS policy"
+
+
+          class GitHub:
+              def __init__(self, repository, token, api_url):
+                  if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+                      raise ValueError("Invalid repository name")
+                  self.repository = repository
+                  self.token = token
+                  self.api_url = api_url.rstrip("/")
+
+              def request(self, path, data=None):
+                  body = None if data is None else json.dumps(data).encode()
+                  request = urllib.request.Request(
+                      f"{self.api_url}/repos/{self.repository}/{path}",
+                      data=body,
+                      headers={
+                          "Authorization": f"Bearer {self.token}",
+                          "Accept": "application/vnd.github+json",
+                          "X-GitHub-Api-Version": "2022-11-28",
+                          "Content-Type": "application/json",
+                      },
+                  )
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return json.load(response)
+
+              def pages(self, path):
+                  for page in range(1, 1001):
+                      separator = "&" if "?" in path else "?"
+                      batch = self.request(f"{path}{separator}per_page=100&page={page}")
+                      if not isinstance(batch, list):
+                          raise ValueError(f"Expected a paginated list from {path}")
+                      yield from batch
+                      if len(batch) < 100:
+                          return
+                  raise ValueError(f"Pagination limit reached for {path}")
+
+
+          class PolicyGuard:
+              def __init__(self, api, owner):
+                  self.api = api
+                  self.owner = owner.casefold()
+                  self.trees = {}
+
+              def main_sha(self):
+                  return self.api.request("branches/main")["commit"]["sha"]
+
+              def tree(self, sha):
+                  if sha not in self.trees:
+                      commit = self.api.request(f"git/commits/{sha}")
+                      tree_sha = commit["tree"]["sha"]
+                      tree = self.api.request(f"git/trees/{tree_sha}?recursive=1")
+                      if tree.get("truncated"):
+                          raise ValueError(f"Tree is truncated at commit {sha}")
+                      self.trees[sha] = {entry["path"]: entry for entry in tree["tree"]}
+                  return self.trees[sha]
+
+              @staticmethod
+              def signature(entry):
+                  if entry is None:
+                      return None
+                  return (entry["mode"], entry["type"], entry["sha"])
+
+              def mismatches(self, canonical, candidate):
+                  expected = self.tree(canonical)
+                  actual = self.tree(candidate)
+                  instruction_paths = {
+                      path for path in set(expected) | set(actual)
+                      if path.rsplit("/", 1)[-1] in ("AGENTS.md", "AGENTS.override.md")
+                  }
+                  paths = set(POLICY_PATHS) | instruction_paths
+                  for path in set(POLICY_PATHS) | (instruction_paths & set(expected)):
+                      entry = expected.get(path)
+                      if entry is None or entry["type"] != "blob" or entry["mode"] not in ("100644", "100755"):
+                          raise ValueError(f"Canonical main lacks a regular policy file: {path}")
+                  return sorted(path for path in paths if self.signature(expected.get(path)) != self.signature(actual.get(path)))
+
+              def proposal_authorized(self, pr, canonical):
+                  labels = {label["name"] for label in pr.get("labels", [])}
+                  if "agents-policy" not in labels:
+                      return False, "Policy proposals require the agents-policy label."
+                  changed = set()
+                  for item in self.api.pages(f"pulls/{pr['number']}/files"):
+                      changed.add(item["filename"])
+                      if "previous_filename" in item:
+                          changed.add(item["previous_filename"])
+                  if not changed or not changed <= PROPOSAL_PATHS:
+                      return False, "Policy proposals may change only the five documented policy/update-procedure files."
+                  comparison = self.api.request(f"compare/{canonical}...{pr['head']['sha']}")
+                  if comparison["status"] not in ("ahead", "identical"):
+                      return False, "Policy proposals must include the current main commit."
+                  command = f"/approve-agents-policy {pr['head']['sha']}"
+                  approved = any(
+                      comment["user"]["login"].casefold() == self.owner
+                      and comment.get("body", "").strip() == command
+                      for comment in self.api.pages(f"issues/{pr['number']}/comments")
+                  )
+                  if not approved:
+                      return False, f"The repository owner must acknowledge this exact head with: {command}"
+                  return True, "Owner acknowledgement applies to this exact policy-only proposal."
+
+              def evaluate(self, pr, canonical):
+                  different = self.mismatches(canonical, pr["head"]["sha"])
+                  if not different:
+                      return "success", "Shared policy matches current main.", []
+                  approved, reason = self.proposal_authorized(pr, canonical)
+                  state = "success" if approved else "failure"
+                  description = "Owner acknowledged this policy-only proposal." if approved else "Shared policy differs from main; synchronize it or obtain policy-proposal acknowledgement."
+                  return state, description, ["Different files: " + ", ".join(different), reason]
+
+
+          def code(value):
+              return "<code>" + html.escape(str(value)) + "</code>"
+
+
+          def publish_status(api, sha, state, description, run_url):
+              api.request(f"statuses/{sha}", {
+                  "state": state,
+                  "context": STATUS_CONTEXT,
+                  "description": description[:140],
+                  "target_url": run_url,
+              })
+
+
+          def check_pull_request(guard, number, run_url, summary):
+              api = guard.api
+              pr = api.request(f"pulls/{number}")
+              if pr["state"] != "open" or pr["base"]["ref"] != "main":
+                  summary.append(f"PR #{number}: skipped (closed or targets another branch).")
+                  return True
+              head = pr["head"]["sha"]
+              publish_status(api, head, "pending", "Comparing the actual PR head with live main.", run_url)
+              try:
+                  canonical = guard.main_sha()
+                  state, description, details = guard.evaluate(pr, canonical)
+                  # Avoid publishing success if either ref changed during the reads.
+                  latest_pr = api.request(f"pulls/{number}")
+                  if guard.main_sha() != canonical or latest_pr["head"]["sha"] != head or latest_pr["state"] != "open" or latest_pr["base"]["ref"] != "main":
+                      state = "error"
+                      description = "Head/main changed during comparison; rerun the policy check."
+                  elif state == "success":
+                      # A label/comment edit may revoke an exception during a run.
+                      state, description, details = guard.evaluate(latest_pr, canonical)
+                  publish_status(api, head, state, description, run_url)
+                  summary.append(f"PR #{number}: **{state}**; main {code(canonical)}, head {code(head)}. {html.escape(description)}")
+                  summary.extend("- " + html.escape(detail) for detail in details)
+                  return state == "success"
+              except Exception as error:
+                  publish_status(api, head, "error", "Policy verification could not complete; inspect the workflow log.", run_url)
+                  summary.append(f"PR #{number}: **error** at head {code(head)}: {html.escape(str(error))}")
+                  return False
+
+
+          def audit_branches(guard, summary):
+              canonical = guard.main_sha()
+              summary.append(f"Branch snapshot audit against live main {code(canonical)} (no files are synchronized automatically):")
+              for branch in guard.api.pages("branches"):
+                  different = guard.mismatches(canonical, branch["commit"]["sha"])
+                  result = "matches" if not different else "differs: " + ", ".join(different)
+                  summary.append(f"- {code(branch['name'])} at {code(branch['commit']['sha'])}: {html.escape(result)}")
+              summary.append("Different branch snapshots are audit findings, not a failure of main. Review which branches remain active before distributing policy.")
+
+
+          def main():
+              with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as stream:
+                  event = json.load(stream)
+              api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GH_TOKEN"], os.environ["GITHUB_API_URL"])
+              guard = PolicyGuard(api, event["repository"]["owner"]["login"])
+              event_name = os.environ["GITHUB_EVENT_NAME"]
+              run_url = f"{os.environ['GITHUB_SERVER_URL']}/{api.repository}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+              summary = ["## AGENTS policy", "The reference is read live from GitHub; this is not a cached origin/main comparison."]
+              individual_pr = event_name in ("pull_request_target", "issue_comment")
+              ok = True
+              try:
+                  if event_name == "pull_request_target":
+                      numbers = [event["pull_request"]["number"]]
+                  elif event_name == "issue_comment":
+                      numbers = [event["issue"]["number"]] if event["issue"].get("pull_request") else []
+                  else:
+                      # A main policy update invalidates old results on open PRs.
+                      numbers = [pr["number"] for pr in api.pages("pulls?state=open&base=main")]
+                  for number in numbers:
+                      ok = check_pull_request(guard, number, run_url, summary) and ok
+                  if not individual_pr:
+                      audit_branches(guard, summary)
+              except Exception as error:
+                  summary.append("**Verification error:** " + html.escape(str(error)))
+                  ok = False
+                  individual_pr = True
+              finally:
+                  with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
+                      stream.write("\n\n".join(summary) + "\n")
+                  print("\n".join(summary))
+              # Audits may report stale branches/PRs while successfully completing;
+              # each PR's commit status still records its own success/failure.
+              return 0 if ok or not individual_pr else 1
+
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PY
