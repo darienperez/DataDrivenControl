@@ -181,6 +181,10 @@ administrators must follow the rules. No additional approving reviewer is
 required for this solo-owner workflow. Force pushes and branch deletion are
 disabled for `main`.
 
+Only actual PR/push test runs use the required `checker-tests` name. Guard-only
+events name their skipped job `checker-tests (not applicable)`, keeping that
+result separate from the required test result.
+
 Validation already executed:
 
 - Local checker suite: **108/108 assertions**; mocked guard cases: **26/26**.
@@ -200,5 +204,9 @@ the trusted guard published a successful `AGENTS policy` status from
 `github-actions[bot]`, without a policy label or owner acknowledgement. The
 checker job passed **108/108**. The final PR revision must pass all three
 required checks before it can merge; its check results are the live record.
+The final revision also fixes the duplicate skipped-check name. That shared
+workflow change uses the reviewed policy-only path with an acknowledgement
+bound to the final head. After merge, a trusted main dispatch verifies the
+distinct non-test job name before the updated workflow is distributed.
 The original implementation and intermediate validation checkpoints remain in
 [PR #2](https://github.com/darienperez/DataDrivenControl/pull/2).
