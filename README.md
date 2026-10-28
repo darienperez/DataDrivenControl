@@ -143,54 +143,70 @@ permissions and policy requirements in its
 Without that repository setting the status reports a result but does not block
 integration. Neither this change nor its checker changes repository settings.
 
-Initial rollout checklist:
+Rollout checkpoint — 2026-10-28:
 
-- [x] Implement and locally verify the mechanism (2026-10-28).
-- [x] Prepare the consolidated instruction content for review (2026-10-28).
-- [ ] Integrate the isolated policy change into `main` when authorized.
-- [ ] Configure the required status check after it has run successfully.
-- [ ] Distribute the approved policy artifacts to branches selected for active work.
-- [ ] Verify their comparisons and explicitly reread policy in ongoing chats.
+- [x] Consolidate the workflow instructions and merge [PR #2](https://github.com/darienperez/DataDrivenControl/pull/2) into `main` at `e74906b`.
+- [x] Commit and publish the synchronized policy on the Hankel branch.
+- [x] Synchronize every existing published branch and advance the local-only `status` pointer.
+- [x] Verify instruction agreement and preserve all nonpolicy branch contents.
+- [x] Verify the `AGENTS policy` status on [PR #3](https://github.com/darienperez/DataDrivenControl/pull/3), without a policy exception.
+- [x] Enable and read back the required checks and PR protection on `main`.
 
-Local verification checkpoint, 2026-10-28: the standalone Julia checker suite
-passed **108/108 assertions**; the workflow's guard logic passed **26/26 cases**
-with mocked GitHub responses. YAML/Python syntax, whitespace, five-file scope,
-and preservation of the original instructions were checked. The checker
-reproduced the expected differences across all six local branches against
-cached `main`; the working policy still reports drift pending consolidation.
-GitHub Actions, required-status settings, and the research package tests were
-not exercised during this tooling change. These are the earlier mechanism
-checks; the consolidation checkpoint below records subsequent work.
+The policy rollout commits contain only `AGENTS.md`, `README.md`, the checker,
+its tests, and its workflow. Every other tree entry and the earlier branch
+history were preserved. The historical foundation branch received an appended
+policy commit; it was not reset or merged with research work.
 
-Consolidation checkpoint, 2026-10-28: the five policy files are prepared on
-`chore/agents-policy` in `/private/tmp/DataDrivenControl-agents-policy`, based
-on `main` at `62c2b4a81a98927cdcaa90efec684e69c9bccbf4`. A live read of GitHub's
-`main` branch confirmed that base. The consolidated instructions restore the
-experiment branch's research lifecycle and Git guidance, make concise task
-record upkeep explicit, and retain the drift-prevention rules. Duplicate Julia
-and learning instructions were combined. The original Hankel checkout and its
-pending mechanism files are preserved. The proposal is uncommitted; content
-review, integration, required checks, and distribution remain open.
+| Branch | Policy checkpoint | Nonpolicy files preserved |
+| --- | --- | ---: |
+| `foundation/f1-hankel-matrices` | `1c92310` | 15 |
+| `foundation/f1-benchmark` | `8340738` | 10 |
+| `experiment/001-data-informativity` | `f4de385` | 10 |
+| `chore/project-foundation` | `20ee154` | 7 |
+| `chore/agents-policy` | `523cc1b` (already matched) | Unchanged |
+| `status` | `e74906b` (local fast-forward only) | Unchanged |
 
-Validation rerun in the isolated policy worktree: `julia --startup-file=no
---project=. test/check_agents.jl` passed **108/108 assertions**;
-`python3 /private/tmp/ddc_agents_policy_ci_fixtures.py` passed **26/26 mocked
-guard cases**. YAML/embedded Python syntax, permission boundaries, all five
-files' whitespace, and `git diff --check` passed. Scope checks confirmed only
-the five policy files differ from `main`, with the three mechanism files
-unchanged from the earlier implementation. A preservation snapshot confirmed
-all 20 original checkout files, its status, branch, and HEAD are unchanged.
-Independent review found no lost workflow preferences or blocking conflicts.
-The checker returned **1 (expected drift)** against canonical `62c2b4a`: this
-is an unmerged policy proposal, not a synchronized branch. Research package
-tests, notebook execution, and live GitHub Actions were not rerun. Next: review
-the consolidated `AGENTS.md`, then authorize a policy-only commit and PR when ready.
+No remote `status` branch was created. A policy-only update does not settle an
+unfinished research question or make the research branch ready to merge.
 
-Publication preparation, 2026-10-28: the user's continuation authorizes the
-policy-only checkpoint and draft PR. Live GitHub verification still places
-`main` at `62c2b4a81a98927cdcaa90efec684e69c9bccbf4`; no existing policy PR was
-found. Final scope, protected-file, whitespace, and original-checkout checks
-are recorded with the PR validation results. The local regression results above
-are earlier executed checks, not new runs for publication. The draft PR will
-record the actual commit, remote publication, and live CI outcomes. Integration,
-required-status settings, and distribution to research branches remain open.
+The repository owner changed its visibility to public after GitHub rejected
+private-repository branch protection under the current account plan. Existing
+rulesets were empty and `main` had no branch protection. An active Actions event
+policy now permits the five existing triggers only for
+`.github/workflows/agents-policy.yml`; other workflows are outside this rule.
+The required checks are `AGENTS policy`, `checker-tests`, and package `test`,
+all bound to the observed GitHub Actions app (ID `15368`). Protection was read
+back after configuration: the base must be up to date, PRs are required, and
+administrators must follow the rules. No additional approving reviewer is
+required for this solo-owner workflow. Force pushes and branch deletion are
+disabled for `main`.
+
+Only actual PR/push test runs use the required `checker-tests` name. Guard-only
+events name their skipped job `checker-tests (not applicable)`, keeping that
+result separate from the required test result.
+
+Validation already executed:
+
+- Local checker suite: **108/108 assertions**; mocked guard cases: **26/26**.
+- Initial PR and post-merge Linux checker suites: **108/108 assertions** each.
+- Initial PR package CI: **1/1 smoke assertion**, with both manifest checks passing; main package CI also passed.
+- Per-branch policy comparisons and staged whitespace checks: passed.
+- Each synchronization commit has its old head as sole parent, exactly five changed paths, canonical policy modes/blobs, and identical nonpolicy tree entries.
+- The post-merge trusted audit ran successfully and reported the expected earlier drift; the PR-head status is a separate verification below.
+
+The package environment emitted headless OpenGL/GLFW initialization messages
+during precompilation despite successful job exits. No dependency, reference,
+tolerance, metric, or research code was changed for this rollout. The earlier
+local and CI results above were not rerun for this documentation edit.
+
+Live activation was verified on the initial README-only PR head `d22a5a4`:
+the trusted guard published a successful `AGENTS policy` status from
+`github-actions[bot]`, without a policy label or owner acknowledgement. The
+checker job passed **108/108**. The final PR revision must pass all three
+required checks before it can merge; its check results are the live record.
+The final revision also fixes the duplicate skipped-check name. That shared
+workflow change uses the reviewed policy-only path with an acknowledgement
+bound to the final head. After merge, a trusted main dispatch verifies the
+distinct non-test job name before the updated workflow is distributed.
+The original implementation and intermediate validation checkpoints remain in
+[PR #2](https://github.com/darienperez/DataDrivenControl/pull/2).
