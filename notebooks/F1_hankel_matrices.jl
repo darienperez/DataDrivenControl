@@ -16,60 +16,13 @@ begin
     using DataDrivenControl, Test
 end
 
-# ╔═╡ c1e62a0b-06eb-44e2-918b-70d9663762bf
-begin
-    # Literal hand references from PDF page 2; do not derive them from res1
-    # or hankel_matrix, so they remain independent comparison targets.
-    hand_u = [0.0, 1.0, -1.0, 1.0, 0.0, 1.0]
-    hand_y = [1.0, 0.8, 1.14, 0.412, 0.8296, 0.66368]
-
-    hand_Hu = [
-         0.0  1.0 -1.0  1.0
-         1.0 -1.0  1.0  0.0
-        -1.0  1.0  0.0  1.0
-    ]
-    hand_Hy = [
-        1.0  0.8   1.14   0.412
-        0.8  1.14  0.412  0.8296
-        1.14 0.412 0.8296 0.66368
-    ]
-    hand_H = [
-         0.0  1.0  -1.0     1.0
-         1.0 -1.0   1.0     0.0
-        -1.0  1.0   0.0     1.0
-         1.0  0.8   1.14    0.412
-         0.8  1.14  0.412   0.8296
-         1.14 0.412 0.8296  0.66368
-    ]
-
-    (inputs=hand_u, outputs=hand_y,
-     input_block=hand_Hu, output_block=hand_Hy, stacked=hand_H)
-end
-
-# ╔═╡ 33f436c9-dd4b-45d5-b2cd-ca66c3acb6ea
-abstract type AbstractBehavior end
-
-# ╔═╡ 4437f835-b007-477d-8b8b-da04490b7d63
-struct Behavior{T<:AbstractArray}
-	trajectories::T
-end
-
-# ╔═╡ 4f72f146-6e02-4a24-9313-6d209a4fd50d
-begin
-	Base.in(traj, 𝑩::Behavior) = traj in 𝑩.trajectories
-	Base.length(𝑩::Behavior) = length(𝑩.trajectories)
-	Base.getindex(𝑩::Behavior, i::Int) = 𝑩[i]
-	Base.iterate(𝑩::Behavior, state=1) = Base.iterate(𝑩.trajectories, state)
-end
-
 # ╔═╡ e3e5a974-8b2c-4851-817d-eec7ac3cfb4b
 md"""
 # F1: hand and Julia Hankel matrices
 
-Reproduce your hand-built input/output Hankel example and explain dimensions,
-column order, and sample alignment. Your completed hand matrices and
-interpretation are recorded below. Your Julia construction attempt and its
-validation remain in progress.
+Compare the hand-built input/output Hankel example with the Julia construction,
+including dimensions, column order, and sample alignment. The saved checks below
+verify this finite example against independent hand references.
 
 The one-state example uses noise-free dynamics and measured output
 
@@ -91,9 +44,9 @@ cover ``k=0,\ldots,6``. Julia index ``k+1`` corresponds to mathematical time
 from measured output data. The hand record assigns no physical units or sampling
 interval; ``k`` indexes discrete samples.
 
-**Hand checkpoint:** sequences, matrices, dimensions, column windows, and
-causal interpretation completed in your progress record. The coded Hankel
-comparison remains unfinished.
+**Completed numerical checkpoint:** the hand and Julia matrices agree with
+``\mathrm{rtol}=\mathrm{atol}=10^{-12}``. Exact floating-point equality is
+unnecessary for this comparison; the observed discrepancy is discussed below.
 """
 
 # ╔═╡ bfb282ee-0d93-4f46-b0dc-2cbd3419b06d
@@ -105,7 +58,7 @@ end
 
 # ╔═╡ 5fbc865b-3573-4f14-8f48-1093c2b72cc2
 begin
-    # TODO: select the run, aligned samples, and depth; enter your hand reference.
+    # Fixed scalar run, aligned samples, and window depth.
     a, b, c, d = (0.8, 0.5, 1.0, 0)
     T = 6
     L = 3
@@ -202,22 +155,49 @@ This hand construction does not establish a general trajectory-spanning or
 persistent-excitation claim.
 """
 
+# ╔═╡ c1e62a0b-06eb-44e2-918b-70d9663762bf
+begin
+    # Literal hand references from PDF page 2; do not derive them from res1
+    # or hankel_matrix, so they remain independent comparison targets.
+    hand_u = [0.0, 1.0, -1.0, 1.0, 0.0, 1.0]
+    hand_y = [1.0, 0.8, 1.14, 0.412, 0.8296, 0.66368]
+
+    hand_Hu = [
+         0.0  1.0 -1.0  1.0
+         1.0 -1.0  1.0  0.0
+        -1.0  1.0  0.0  1.0
+    ]
+    hand_Hy = [
+        1.0  0.8   1.14   0.412
+        0.8  1.14  0.412  0.8296
+        1.14 0.412 0.8296 0.66368
+    ]
+    hand_H = [
+         0.0  1.0  -1.0     1.0
+         1.0 -1.0   1.0     0.0
+        -1.0  1.0   0.0     1.0
+         1.0  0.8   1.14    0.412
+         0.8  1.14  0.412   0.8296
+         1.14 0.412 0.8296  0.66368
+    ]
+
+    (inputs=hand_u, outputs=hand_y,
+     input_block=hand_Hu, output_block=hand_Hy, stacked=hand_H)
+end
+
 # ╔═╡ 11ac5983-cb17-4b82-98f1-7562aa59fcdd
 md"""
 ### Construct the matrices
 
-Write a small notebook-local construction using your chosen indexing convention.
-Use the completed hand example to construct ``H_3(u)`` and ``H_3(y)``, then
-display the result so you can inspect the columns. Match the input-then-output
-row order and time-aligned windows when forming ``H``.
+For this example, column ``j`` contains Julia samples ``j:j+L-1``. Construct
+``H_3(u)`` and ``H_3(y)`` with matching windows, then stack input rows before
+output rows. The constructor stays notebook-local; a reusable depth contract
+and package extraction are deferred until broader use is needed.
 """
-
-# ╔═╡ e0a43d13-fd8b-4b1b-bd32-f4875bd51557
-
 
 # ╔═╡ 8658ce82-6c30-4e82-82cf-86cff3bb551d
 begin
-    # TODO: implement your Hankel construction and display the resulting matrices.
+    # Notebook-local construction for the fixed depth L = 3.
 
     function hankel_matrix(data::AbstractVector, L::Int)
         T = length(data)
@@ -229,48 +209,55 @@ begin
         end
         return H
     end
-end
 
-# ╔═╡ 8decf3be-6061-4210-8742-64b6ab6c8892
-begin
 	Hu = hankel_matrix(res1.inputs, L)
 	Hy = hankel_matrix(res1.outputs, L)
 	H = vcat(Hu, Hy)
 end
 
+# ╔═╡ 8decf3be-6061-4210-8742-64b6ab6c8892
+Hu
+
+# ╔═╡ fafff0e2-bb52-459c-98d9-e821d9561dfb
+Hy
+
 # ╔═╡ ee3e54ea-4822-49c4-9a64-be0bec124103
-res1.outputs[2:end]
-
-# ╔═╡ d4929af5-7ed8-49f0-aaca-d8337b3ea7bb
-test = [1,2, 5,6, 22, 11] 
-
-# ╔═╡ 54f97cc2-2f17-4fab-8694-14c6d3625ebe
-reshape(test, 2, 3)
-
-# ╔═╡ 43b15588-915a-4253-b0b3-53f2a91016ab
-size(test)
+H
 
 # ╔═╡ 485b8301-bc8b-44be-9ed8-252be3a1826b
 md"""
 ### Compare with the hand calculation
 
-- Check dimensions, column order, and input/output sample alignment.
-- Compare your constructed ``H_3(u)`` and ``H_3(y)`` with `hand_Hu` and
-  `hand_Hy`, and the stacked ``H`` with `hand_H`, including the first and
-  last columns. Choose and state the numerical comparison tolerances before
-  judging the results.
-- Connect your result to the hand interpretation above and record any mismatch.
+The checks use the existing ``\mathrm{rtol}=\mathrm{atol}=10^{-12}`` for all
+approximate comparisons. Both blocks are ``3\times4`` and the stacked matrix is
+``6\times4``. All entries agree with the independent hand matrices, including
+the first and last aligned trajectory windows.
 
-**Constructed-matrix checks and outcomes:** _To complete as your implementation develops._
+The input block compares exactly equal. Exact equality fails for the output
+and stacked blocks because of floating-point roundoff: the maximum absolute
+discrepancy is ``2.220446049250313\times10^{-16}``. The data, hand references,
+and tolerances were not changed to obtain agreement.
 
-**Code-versus-hand interpretation and next step:** _Fill in after comparing._
+This completes the finite numerical comparison. It does not establish a
+general trajectory-spanning or persistent-excitation result. The original
+benchmark's initial-state difference derivation and behavior explanation remain
+separate learning checkpoints.
 """
 
 # ╔═╡ 71eb0dce-60db-41b0-9f86-f1f324ee43e1
-begin
-    # TODO: check your construction against the hand reference and predicted shape.
-    H == hand_H
-    hand_H
+@testset "Hankel matrix construction" begin
+    @test size(Hu) == (3, 4)
+    @test size(Hy) == (3, 4)
+    @test size(H) == (6, 4)
+    @test isapprox(res1.inputs, hand_u; rtol=1e-12, atol=1e-12)
+    @test isapprox(res1.outputs, hand_y; rtol=1e-12, atol=1e-12)
+    @test isapprox(Hu, hand_Hu; rtol=1e-12, atol=1e-12)
+    @test isapprox(Hy, hand_Hy; rtol=1e-12, atol=1e-12)
+    @test isapprox(H, hand_H; rtol=1e-12, atol=1e-12)
+    @test isapprox(H[:, 1], [hand_u[1:3]; hand_y[1:3]];
+                   rtol=1e-12, atol=1e-12)
+    @test isapprox(H[:, end], [hand_u[4:6]; hand_y[4:6]];
+                   rtol=1e-12, atol=1e-12)
 end
 
 # ╔═╡ a9c1c90d-bb83-47f9-a69b-e5d161e1b273
@@ -282,9 +269,6 @@ Hu
 # ╔═╡ 693736b7-a2c0-4283-8eda-8c0bb611d9f8
 Hy
 
-# ╔═╡ 10097ddc-48f1-496c-bd8a-af419e618084
-
-
 # ╔═╡ Cell order:
 # ╠═1ad29f53-cc2d-42bf-aa24-a056de538aa1
 # ╟─e3e5a974-8b2c-4851-817d-eec7ac3cfb4b
@@ -293,19 +277,12 @@ Hy
 # ╟─d3f29046-210c-4cc9-9c16-3453ada83ebd
 # ╠═c1e62a0b-06eb-44e2-918b-70d9663762bf
 # ╟─11ac5983-cb17-4b82-98f1-7562aa59fcdd
-# ╠═33f436c9-dd4b-45d5-b2cd-ca66c3acb6ea
-# ╠═4437f835-b007-477d-8b8b-da04490b7d63
-# ╠═4f72f146-6e02-4a24-9313-6d209a4fd50d
-# ╠═e0a43d13-fd8b-4b1b-bd32-f4875bd51557
 # ╠═8658ce82-6c30-4e82-82cf-86cff3bb551d
 # ╠═8decf3be-6061-4210-8742-64b6ab6c8892
+# ╠═fafff0e2-bb52-459c-98d9-e821d9561dfb
 # ╠═ee3e54ea-4822-49c4-9a64-be0bec124103
-# ╠═d4929af5-7ed8-49f0-aaca-d8337b3ea7bb
-# ╠═54f97cc2-2f17-4fab-8694-14c6d3625ebe
-# ╠═43b15588-915a-4253-b0b3-53f2a91016ab
 # ╟─485b8301-bc8b-44be-9ed8-252be3a1826b
 # ╠═71eb0dce-60db-41b0-9f86-f1f324ee43e1
 # ╠═a9c1c90d-bb83-47f9-a69b-e5d161e1b273
 # ╠═0949a87a-0e3e-4a7e-94bd-4249851a9ed2
 # ╠═693736b7-a2c0-4283-8eda-8c0bb611d9f8
-# ╠═10097ddc-48f1-496c-bd8a-af419e618084

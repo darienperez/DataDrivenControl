@@ -1,6 +1,34 @@
 # F1: Initial states and input/output behavior
 
-## Current numerical Hankel checkpoint — 2026-10-27
+## Current closeout — 2026-10-29
+
+The finite numerical F1 checkpoint is closed out locally on
+`foundation/f1-hankel-matrices`, with a PR to `main` being prepared. The shared
+SISO simulator and its original independent references remain unchanged.
+The Hankel notebook now retains **10/10 passing assertions** at the original
+`rtol=atol=1e-12`, completed result text, and the user's removal of the unused
+recursive wrapper and scratch cells.
+
+New validation: **12 benchmark / 15 Hankel non-setup cells executed**;
+**15/15** external independent-reference checks, **15/15** package assertions
+via `Pkg.test(; allow_reresolve=false)`, and **108/108** policy-checker assertions
+passed. The first sandboxed package attempt failed on a Julia depot lock before
+running tests; its rerun with depot access passed. Markdown/Test binding warnings
+occurred in the non-setup run. Notebook setup cells and Pluto UI/reactive behavior
+were not executed; no new GitHub CI run has been observed.
+
+See [the Hankel task record](F1_hankel_matrices.md) for exact commands, source
+provenance, validation limits, current Git checkpoint, and PR preparation steps.
+The initial-state difference derivation and same-behavior explanation still
+await the user's attempt/review. General Hankel depth handling and extraction
+remain deferred until broader reuse; this closeout establishes no general
+trajectory-spanning or persistent-excitation result. These conceptual learning
+items remain open independently of the verified numerical contribution.
+
+Earlier notes and validation results below are historical; their unfinished
+cleanup descriptions have been superseded by the current closeout above.
+
+## Historical numerical Hankel checkpoint — 2026-10-27
 
 Working branch: `foundation/f1-hankel-matrices`, based on `b8930e1`.
 The existing simulator is exported as `DataDrivenControl.simulate` from
@@ -36,7 +64,7 @@ for this documentation update. Setup cells and Pluto UI remain untested.
 
 Earlier notes and validation results below are historical.
 
-## Status and continuity
+## Historical status and continuity — 2026-10-27
 
 The four-step numerical F1 checkpoint is verified: its earlier verification
 passed **5 notebook assertions** and **9 independent trajectory checks**. The
