@@ -2,8 +2,9 @@
 
 ## Current closeout — 2026-10-29
 
-The finite numerical F1 checkpoint is closed out locally on
-`foundation/f1-hankel-matrices`, with a PR to `main` being prepared. The shared
+The finite numerical F1 checkpoint is closed out and published on
+`foundation/f1-hankel-matrices`; [PR #4](https://github.com/darienperez/DataDrivenControl/pull/4)
+is open to `main` for review. The shared
 SISO simulator and its original independent references remain unchanged.
 The Hankel notebook now retains **10/10 passing assertions** at the original
 `rtol=atol=1e-12`, completed result text, and the user's removal of the unused
@@ -15,7 +16,8 @@ via `Pkg.test(; allow_reresolve=false)`, and **108/108** policy-checker assertio
 passed. The first sandboxed package attempt failed on a Julia depot lock before
 running tests; its rerun with depot access passed. Markdown/Test binding warnings
 occurred in the non-setup run. Notebook setup cells and Pluto UI/reactive behavior
-were not executed; no new GitHub CI run has been observed.
+were not executed. Publication CI runs were in progress at PR creation; current
+final-head outcomes are recorded in PR #4 and its Checks tab.
 
 See [the Hankel task record](F1_hankel_matrices.md) for exact commands, source
 provenance, validation limits, current Git checkpoint, and PR preparation steps.

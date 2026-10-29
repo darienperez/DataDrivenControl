@@ -1,10 +1,9 @@
 # F1: Hankel matrices by hand and in Julia
 
-**Status — 2026-10-29:** The finite numerical F1 checkpoint is closed out
-locally on `foundation/f1-hankel-matrices`. The notebook now saves the verified
-comparison and its interpretation. The user approved the closeout commit,
-merging current `main` into the feature branch, publishing, and opening the PR.
-Those approved Git operations will be recorded at the publication checkpoint.
+**Status — 2026-10-29:** The finite numerical F1 checkpoint is closed out and
+published on `foundation/f1-hankel-matrices`. [PR #4](https://github.com/darienperez/DataDrivenControl/pull/4)
+is open to `main` for review. Integration into `main` is a separate decision;
+the deferred conceptual learning and broader research questions remain open.
 
 ## Current closeout checkpoint
 
@@ -43,8 +42,9 @@ Validation executed on 2026-10-29:
 
 The non-setup run emitted Markdown/Test imported-binding warnings; the package
 suite succeeded and printed only the compatibility-restricted-version notice.
-Setup cells were parsed, not executed. Pluto UI/reactive execution and new
-GitHub Actions runs were not exercised. Earlier results below remain historical.
+Setup cells were parsed, not executed. Pluto UI/reactive execution was not
+exercised. These are local validation results; publication CI is tracked below.
+Earlier results below remain historical.
 
 The numerical scope is the fixed `T=6`, `L=3` example. General depth handling
 and package extraction remain deferred until broader reuse. The original
@@ -52,13 +52,36 @@ benchmark's initial-state difference derivation and behavior explanation remain
 unreviewed learning work, not completed research claims. No general trajectory
 spanning or persistent-excitation conclusion follows from these checks.
 
-Approved Git sequence — 2026-10-29: commit the three closeout files, bring verified
-current `main` into the feature branch to remove already-synchronized policy
-history from the PR diff, publish the feature branch, and open its PR to `main`.
-This feature-branch synchronization preserves published history; it does not
-integrate F1 into `main`. Before these operations the branch was 4 commits ahead /
-2 behind `origin/main`, and all five shared policy files already matched byte for
-byte. Integration of the PR into `main` remains a separate, unapproved action.
+## Publication checkpoint — 2026-10-29
+
+The user explicitly approved the closeout commit, main-to-feature merge, push,
+and PR creation. Performed:
+
+- Committed the three closeout files as `1e6203c4d102303433dca7c2172eef3f1bf03589`.
+- Merged live-verified `main` at `a397700d982e0a1324455863f84daab09612fc5a`
+  **into the feature branch** as `ca42205c51e6ab41c5d7f254d4c84668ec586605`.
+  Pre/post merge tree SHA was identical:
+  `16e82bc27f9e775283ea30710fa330d59f443d2f`. No numerical code changed.
+- Pushed the feature branch and verified its published head through GitHub.
+- Opened [PR #4](https://github.com/darienperez/DataDrivenControl/pull/4), targeting
+  `main`, as ready for review of the finite numerical contribution.
+
+Post-merge instruction comparison and whitespace checks passed. Independent
+scope checks confirmed current `main` is an ancestor, exactly nine F1 paths
+appear in the PR diff, and policy artifacts, dependency files, and CI configuration
+match `main`. The working tree was clean after the merge. The preexisting
+numerical results apply to the identical tree; they were not rerun for the merge
+or this publication-record update.
+
+At PR creation on head `ca42205`, the trusted `AGENTS policy` status was pending,
+and the ordinary policy-test and package-CI runs were in progress. These are
+initial observations, not passing results. The PR description and
+[Checks tab](https://github.com/darienperez/DataDrivenControl/pull/4/checks)
+carry live final-head CI outcomes, including the publication-record update.
+The current source record and benchmark continuity note were updated for handoff.
+
+Next step: review the scoped PR and its required `AGENTS policy`, `checker-tests`,
+and `test` results. Merging the PR into `main` has not been authorized or performed.
 
 ## Historical checkpoint — 2026-10-27
 
