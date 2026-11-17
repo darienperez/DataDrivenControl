@@ -9,3 +9,4 @@ using DataDrivenControl, LinearAlgebra, Test
 end
 
 include("simulate_lti.jl")
+include("hankel_matrix.jl")
